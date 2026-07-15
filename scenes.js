@@ -1,3 +1,5 @@
+import { SoilSystem } from './soil.js';
+
 class ISCENE {
 
     audioFromMedia = null;
@@ -9,9 +11,11 @@ class ISCENE {
     ihud = null;
     lockfastload=null;
     lastScene=0;
+    soilSystem=null;
 
 
     update() {
+        if (this.soilSystem) this.soilSystem.update();
     }
 
     init(audio, audiofr, cobject, sc, ih) {
@@ -53,6 +57,12 @@ class ISCENE {
     async clean() {
         this.creating = true;
         $('#btCenter').show();
+        if (this.soilSystem) {
+            this.soilSystem.dispose();
+            this.soilSystem = null;
+            window.SOIL_SYSTEM = null;
+            window.EXCAVATOR_SHOVEL = null;
+        }
         audios.forEach((audio) => {
             if (audio.isPlaying) audio.stop();
             /*if(audio.ismediaElement)audio.disconnect();
@@ -89,6 +99,11 @@ class ISCENE {
                         }                                         
                     if(iscene.lastScene==value)return;                    
                     iscene.lastScene=value;
+                    if (value == 1) {
+                        me.soilSystem = new SoilSystem(me.scene, iphysics);
+                        me.soilSystem.create();
+                        window.SOIL_SYSTEM = me.soilSystem;
+                    }
                     $('#btCenter').hide();
                     iphysics.paused=false;
                     me.creating = false;
@@ -129,30 +144,10 @@ class ISCENE {
                 this.scene.add(object);
                 //object.position.y = -39.2;
             });
-            icreateObject('scavator', async (object) => {                
+            icreateObject('scavator', async (object) => {
                 this.scene.add(object);
                 //object.position.y = -39.2;
             });
-
-                                    //TEST OBJECTS
-                                    
-                                    function rndI(min, max) { // min and max included 
-                                        return Math.floor(Math.random() * (max - min + 1) + min)
-                                      }
-                                    const material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
-                                    var debrit;
-                                    for(var i=0;i<20;i++){
-                                        debrit = new THREE.Mesh(new THREE.BoxGeometry(rndI(1,8), rndI(1,8), rndI(1,10)), material);
-                                        debrit.position.set(rndI(10,40), 5, rndI(10,40));scene.add(debrit);
-                                        await iphysics.createObj(debrit, 'box', 'obj', null, 1);
-                                    }
-                                    for(var i=0;i<20;i++){
-                                        debrit = new THREE.Mesh(new THREE.SphereGeometry(rndI(1,8)/4, 8,8), material);
-                                        debrit.position.set(rndI(10,40), 5, rndI(10,40));scene.add(debrit);
-                                        await iphysics.createObj(debrit, 'sphere', 'obj', null, 1);
-                                    }
-                                    
-
 
         }
 

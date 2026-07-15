@@ -1,5 +1,6 @@
 
 import { Vector3 } from 'three';
+import { createProceduralTerrain } from './terrain.js';
 
 class OBJECT3D {
     constructor() {
@@ -159,23 +160,8 @@ class OBJECT3D {
                 break;
             }
             case 'plane': {//plane
-                async function createPlane() {
-                    const groundTexture = await LOADER.textureLoader.loadAsync('./images/shader/ground.png');
-                    groundTexture.wrapS = THREE.RepeatWrapping;
-                    groundTexture.wrapT = THREE.RepeatWrapping;
-                    groundTexture.repeat.set(4, 4); // 可以根据需要调整重复次数
-                    groundTexture.anisotropy = 4;
-                    
-                    const groundMaterial = new THREE.MeshPhongMaterial({ 
-                        map: groundTexture 
-                    });
-                    
-                    obj1 = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), groundMaterial);
-                    obj1.rotation.x = -Math.PI / 2;
-                    iphysics.createObj(obj1, 'box', 'wall', null, 0);
-                    if (typeof (execute) == 'function') execute(obj1);
-                }
-                createPlane();
+                obj1 = await createProceduralTerrain();
+                if (typeof (execute) == 'function') execute(obj1);
                 break;
             }
 
@@ -205,11 +191,20 @@ class OBJECT3D {
                     loadGLBZ(directory, 'scavator.glb', async (object) => {
                         object = object.parent;
 
+                        var styledMaterials = new Set();
                         threatMeshes(object, (mesh) => {
                             if (mesh.material && mesh.material.isMaterial) {
-                                if(iphysics.debug==true){
                                 mesh.material.transparent = true;
-                                mesh.material.opacity = 0.8;
+                                mesh.material.opacity = iphysics.debug == true ? 0.6 : 0.72;
+                                mesh.material.depthWrite = true;
+                                if (!styledMaterials.has(mesh.material)) {
+                                    mesh.material.color.set(0x35444f);
+                                    if (mesh.material.specular) mesh.material.specular.set(0x65bce8);
+                                    if (mesh.material.emissive) mesh.material.emissive.set(0x07141d);
+                                    mesh.material.emissiveIntensity = 0.2;
+                                    mesh.material.shininess = 70;
+                                    mesh.material.needsUpdate = true;
+                                    styledMaterials.add(mesh.material);
                                 }
                             }
                         });
@@ -315,6 +310,7 @@ class OBJECT3D {
                             part.contact.visible = iphysics.debug;
                         }
                         await iphysics.groupObj(shovel, fisicParts, 0.6);
+                        window.EXCAVATOR_SHOVEL = shovel;
 
                         //atach shovel to superior arm                        
                         var shoveljt = await iphysics.createJoint(
@@ -411,8 +407,14 @@ class OBJECT3D {
                         //CHAINS MESH ATACH
                         var chain_tooth = object.getObjectByName('chain_pike');
                         chain_tooth.material=new THREE.MeshPhongMaterial({
-                            map:await LOADER.textureLoader.loadAsync(directory+'chain.jpg')
-                        }); 
+                            map:await LOADER.textureLoader.loadAsync(directory+'chain.jpg'),
+                            color: 0x27343d,
+                            specular: 0x65bce8,
+                            shininess: 66,
+                            transparent: true,
+                            opacity: 0.7,
+                            depthWrite: true
+                        });
                         var chain_ghost;
                         for (var i = 0; i < 80; i++) {
                             //chain_ghost=new THREE.InstancedMesh(chain_tooth.geometry, chain_tooth.material, 1);

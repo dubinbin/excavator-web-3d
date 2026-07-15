@@ -440,7 +440,7 @@ async function init() {
     $($('.box')[0]).removeClass('animation_paused');
     $($('.box')[1]).removeClass('animation_paused');
     $($('.box')[2]).removeClass('animation_paused');
-    $('#loadingText').text('Loading Scene...');
+    $('#loadingText').text('System Initializing');
 
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 600);
     camera.position.y = 84;
@@ -535,13 +535,13 @@ function animate() {
                 var test = 0.02;
                 control.update(test, EVENTS._keyMap, EVENTS.mouseHPos, 1);                
                 control.update(test, EVENTS._keyMap, EVENTS.mouseHPos, 2);                
-                iscene.update();                
                 //PHYSIC.update(timestep);    
                 //animate        
                 now = Date.now();
                 timer = now - start;
                 ianimate.animateObjects(test, timer);
                 iphysics.update(deltafps);
+                iscene.update();
             }
             deltafps -= timestep;
             //if (deltafps > 5) deltafps = 0;
@@ -645,24 +645,16 @@ function onClick(mouseButtons) {
     for (var e = 0; e < rayintersects.length; e++) {
         var intercept = rayintersects[e].object;
 
-        var tinfo = intercept.id;
-        if (intercept.name && intercept.name != '') tinfo += ' - ' + intercept.name;
-        document.getElementById('info2').innerText = tinfo;
-
         if (typeof (intercept.onClick) == 'function') {
             intercept.onClick(intercept);
         }
 
-    
         //intercept direct
         if (intercept && intercept.name && typeof (intercept.name) == 'string') {
             if (intercept.name == 'room_floor' ) {
-                //TODO
+
             }
-           
         }
-        
-        
         return;//ONLY THE FIRST ITERCEPT and RETURN
     }
 }
