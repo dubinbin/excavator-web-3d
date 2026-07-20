@@ -540,7 +540,7 @@ function animate() {
                 now = Date.now();
                 timer = now - start;
                 ianimate.animateObjects(test, timer);
-                iphysics.update(deltafps);
+                iphysics.update(timestep);
                 iscene.update();
             }
             deltafps -= timestep;

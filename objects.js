@@ -309,7 +309,16 @@ class OBJECT3D {
                             part.material = iphysics.material;
                             part.contact.visible = iphysics.debug;
                         }
-                        await iphysics.groupObj(shovel, fisicParts, 0.6);
+                        const collisionGroups = iphysics.collisionGroups;
+                        // 内缩物理壳让可视铲斗先进入地面一小段，再由 terrain 承托。
+                        await iphysics.groupObj(
+                            shovel,
+                            fisicParts,
+                            0.6,
+                            collisionGroups.SHOVEL,
+                            collisionGroups.ALL,
+                            0.87
+                        );
                         window.EXCAVATOR_SHOVEL = shovel;
 
                         //atach shovel to superior arm                        

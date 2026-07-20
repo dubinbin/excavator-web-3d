@@ -24,6 +24,12 @@ class IPHYSICS {
             frictionwall: 1, frictionrwall: 1, restwall: 1, damplwall: 0, dampawall: 0,
             frictionobj: 0.5, frictionrobj: 0.5, restobj: 0.1, damlpobj: 1, dampaobj: 1,
         }
+        this.collisionGroups = Object.freeze({
+            DEFAULT: 1,
+            TERRAIN: 2,
+            SHOVEL: 4,
+            ALL: 0x7fff
+        });
         this.paused = true;
         this.ray = new THREE.Ray();
 
@@ -158,9 +164,9 @@ class IPHYSICS {
         if (typeof (this.physicsWorld) == _UN || this.physicsWorld == null || this.paused == true) return;
         if (this.transformAux1 == null) return;
 
-        const deltaTime = delta;
-        //this.physicsWorld.stepSimulation(deltaTime, 4, 1 / 60)
-        this.physicsWorld.stepSimulation(deltaTime, 4, 1 / 30);
+        const deltaTime = Math.min(delta, 0.1);
+        // 固定 60 Hz 子步，避免低帧率时关节和复合碰撞体出现明显跳动。
+        this.physicsWorld.stepSimulation(deltaTime, 4, 1 / 60);
 
         for (let i = 0; i < this.rigidBodies.length; i++) {
             const objThree = this.rigidBodies[i];
@@ -321,7 +327,7 @@ class IPHYSICS {
     //poscenter - position of mass in obj / or 0 default
     //qua - quaternion of object
     //shape = predefinide ammo shape
-    createRigidBody(obj, mass, tam, pos, quat, shape) {
+    createRigidBody(obj, mass, tam, pos, quat, shape, collisionGroup, collisionMask) {
         var ammoShape;
         if (typeof (shape) == _UN) {
             ammoShape = new Ammo.btBoxShape(new Ammo.btVector3(tam.x * 0.5, tam.y * 0.5, tam.z * 0.5));
@@ -372,7 +378,13 @@ class IPHYSICS {
             body.setCollisionFlags(0);
         }
 
-        this.physicsWorld.addRigidBody(body);
+        const group = collisionGroup == null
+            ? this.collisionGroups.DEFAULT
+            : collisionGroup;
+        const mask = collisionMask == null
+            ? this.collisionGroups.ALL
+            : collisionMask;
+        this.physicsWorld.addRigidBody(body, group, mask);
         return body;
     }
 
@@ -435,7 +447,14 @@ class IPHYSICS {
         return p2p;
     }
 
-    async groupObj(nophisicObj, fisicObjs, mass) {
+    async groupObj(
+        nophisicObj,
+        fisicObjs,
+        mass,
+        collisionGroup,
+        collisionMask,
+        collisionScale
+    ) {
         var cpshape = new Ammo.btCompoundShape(true, fisicObjs.length - 1);
         var transform = new Ammo.btTransform();
         transform.setIdentity();
@@ -450,6 +469,15 @@ class IPHYSICS {
             if (fisicObjs[i].parent && fisicObjs[i].parent != null) fisicObjs[i].parent.remove(fisicObjs[i]);
             cpshape.addChildShape(transform, pshape);
         }
+        if (collisionScale != null && collisionScale !== 1) {
+            const localScale = new Ammo.btVector3(
+                collisionScale,
+                collisionScale,
+                collisionScale
+            );
+            cpshape.setLocalScaling(localScale);
+            Ammo.destroy(localScale);
+        }
         const localInertia = new Ammo.btVector3(1, 1, 1);
         cpshape.calculateLocalInertia(mass, localInertia);
 
@@ -457,7 +485,16 @@ class IPHYSICS {
         nophisicObj.getWorldPosition(pos);
         var quat = new THREE.Quaternion();
         nophisicObj.getWorldQuaternion(quat);
-        var body = await this.createRigidBody(nophisicObj, mass, 0, pos, quat, cpshape);
+        var body = await this.createRigidBody(
+            nophisicObj,
+            mass,
+            0,
+            pos,
+            quat,
+            cpshape,
+            collisionGroup,
+            collisionMask
+        );
 
         body.setRollingFriction(this.conf.frictionrobj);
         body.setFriction(this.conf.frictionobj);

@@ -202,13 +202,16 @@ async function createTerrainPhysics(terrain) {
 
     const shape = new Ammo.btBvhTriangleMeshShape(triangleMesh, true, true);
     shape.setMargin(0.05);
+    const collisionGroups = iphysics.collisionGroups;
     const body = await iphysics.createRigidBody(
         terrain,
         0,
         null,
         terrain.position,
         terrain.quaternion,
-        shape
+        shape,
+        collisionGroups.TERRAIN,
+        collisionGroups.ALL
     );
     body.setRollingFriction(iphysics.conf.frictionrwall);
     body.setFriction(iphysics.conf.frictionwall);
