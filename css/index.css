@@ -224,8 +224,8 @@ button {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 196px;
-  content: "EXCAVATOR  /  SIMULATION CORE";
+  bottom: 256px;
+  content: "EXCAVATOR CONTROL SYSTEM";
   color: #89dcff;
   font-family: Consolas, "SFMono-Regular", monospace;
   font-size: 10px;

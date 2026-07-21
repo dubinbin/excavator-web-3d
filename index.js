@@ -64,7 +64,6 @@ window.ianimate = new ANIMATE();
 var irender = new IRENDER();
 var iobj3D = new OBJECT3D();
 var rayintersects = [], raycaster = new THREE.Raycaster(), raycasterDisabled = false;
-var waitforaudio, waitforaudiotimes = 0;
 const start = Date.now();
 const clock = new THREE.Clock();
 
@@ -190,34 +189,14 @@ function transfCtrlShow(obj) {
 }
 
 
-//######### HTML START BUTTON ############
+//######### HTML INITIALIZATION ############
 $(document).ready(function () {
     Ammo().then(function(Ammo) {
         window.Ammo=Ammo;
         iphysics=new IPHYSICS();
-        initUserWait();
-    });    
-});
-
-function initUserWait() {
-    waitforaudiotimes += 1;
-    if (navigator.userActivation.hasBeenActive) {
-        clearTimeout(waitforaudio);
-        waitforaudio = false;
         init();
-    } else {
-        //console.log('waiting gestue');
-        if (waitforaudiotimes > 10) {
-            //console.log('stop waiting gestue');
-            waitforaudiotimes = 0;
-            clearTimeout(waitforaudio);
-            waitforaudio = true;
-            init();
-        } else {
-            waitforaudio = setTimeout(() => { initUserWait(); }, 500);
-        }
-    }
-}
+    });
+});
 
 //sucess init 3d scene
 function initSucess() {
